@@ -134,7 +134,7 @@ blockchain.clients[id] = 0
 f.close()
 
 print(blockchain.chain)
-print(blockchain.hash(blockchain.last_block)
+print(blockchain.hash(blockchain.last_block))
 
 @app.route('/mine', methods=['POST'])
 def mine(request):
