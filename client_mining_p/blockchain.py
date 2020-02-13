@@ -117,7 +117,7 @@ class Blockchain(object):
         guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
 
-        return guess_hash[:6] == "000000"
+        return guess_hash[:2] == "00"
 
 # Instantiate our Node
 app = Flask(__name__)
@@ -134,29 +134,39 @@ blockchain.clients[id] = 0
 f.close()
 
 print(blockchain.chain)
-print(blockchain.hash(blockchain.last_block))
+# print(blockchain.hash(blockchain.last_block))
+print(blockchain.last_block)
 
 @app.route('/mine', methods=['POST'])
-def mine(request):
+def mine():
     # pull data from request that was sent by client
-    proof = request.get_js.get('proof')
-    id = request.get_js.get('id')
+    proof = request.get_json()['proof']
+    id = request.get_json()['id']
 
     # Forge the new Block by adding it to the chain with the proof
     previous_hash = blockchain.hash(blockchain.last_block)
 
-    if blockchain.valid_proof(proof, previous_hash) and (blockchain.clients[id] is not None):
+    previous_block_string = json.dumps(blockchain.last_block, sort_keys=True)
+    print
+
+    if blockchain.valid_proof(previous_block_string, proof) and (blockchain.clients[id] is not None):
+        new_block = blockchain.new_block(proof, previous_hash)
         blockchain.clients[id] += 1
         response = {
-            "message": "Success"
+            "message": "New Block Forged"
         }
         return jsonify(response), 200
     else:
         response = {
             # TODO: Send a JSON response with the new block
-            "message": "failure"
+            "message": "failure",
+            "proof_valid": blockchain.valid_proof(previous_block_string, proof),
+            "client[id]": blockchain.clients[id],
+            "id": id,
+            "proof": proof,
         }
         return jsonify(response), 400
+    
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
